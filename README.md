@@ -1,8 +1,17 @@
-# socketIO-Objc
-** This version only support socket.io v1.0 **
-
 # Socket.IO / Objective C Library
 
+** This version only support Socket.io v1.X.X **
+
+Support Features : 
+* Ack
+* Binary Data
+* Binary Ack
+* Namespace
+
+run "Server" Target then SocketIO-ObjC-Exemple to run some test usage methods
+
+Inspired by : 
+* [github.com/francoisp/socket.IO-objc](https://github.com/francoisp/socket.IO-objc)
 ## Usage
 
 The easiest way to connect to your Socket.IO / node.js server is
