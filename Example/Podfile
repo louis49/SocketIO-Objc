@@ -1,0 +1,11 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+target 'SocketIO-ObjC', :exclusive => true do
+  pod "SocketIO-ObjC", :path => "../"
+end
+
+target 'Tests', :exclusive => true do
+  pod "SocketIO-ObjC", :path => "../"
+
+  
+end
