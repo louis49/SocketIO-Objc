@@ -12,6 +12,7 @@ run "Server" Target then SocketIO-ObjC-Exemple to run some test usage methods
 
 Inspired by : 
 * [github.com/francoisp/socket.IO-objc](https://github.com/francoisp/socket.IO-objc)
+
 ## Usage
 
 The easiest way to connect to your Socket.IO / node.js server is
