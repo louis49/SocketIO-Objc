@@ -53,6 +53,9 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	BOOL _connected;
 	BOOL _connecting;
 	
+	NSMutableDictionary *_inputStreams;
+	NSMutableDictionary *_outputStreams;
+	
 	NSMutableArray *_queue;
 	
 	dispatch_source_t _ping;
@@ -73,6 +76,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		{
 			_delegate = delegate;
 			_acks = [[NSMutableDictionary alloc] init];
+			_inputStreams = [[NSMutableDictionary alloc] init];
+			_outputStreams = [[NSMutableDictionary alloc] init];
 			_queue = [[NSMutableArray alloc] init];
 			_connected = NO;
 			_connecting = NO;
@@ -81,7 +86,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 			_nsp = nsp;
 			_connectionTimeout = connectionTimeout;
 			_secured = secured;
-		
+			_ackCount = -1;
 			_pingTimeout = 20;
 		}
 	return self;
@@ -119,10 +124,6 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	AFHTTPRequestOperationManager * manager = [AFHTTPRequestOperationManager manager];
 	
 	[manager setResponseSerializer:[AFHTTPResponseSerializer serializer]];
-	
-	//[[manager responseSerializer] setAcceptableContentTypes:[NSSet setWithObject:@"application/octet-stream"]];
-	
-	//NSLog(@"%@", [[manager responseSerializer] acceptableContentTypes]);
 	
 	[manager GET:handshakeUrl
 	  parameters:nil
@@ -223,6 +224,28 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	return out_data;
 }
 
+-(NSData *)streamToSend:(EngineIOType)type withData:(NSData *)data
+{
+	NSMutableData * out_data = [[NSMutableData alloc]init] ;
+	
+	UInt8 type_bytes[1];
+	type_bytes[0] = (UInt8)type;
+	
+	UInt8 zero_bytes[1];
+	zero_bytes[0] = (UInt8)0;
+	
+	NSData * type_data = [NSData dataWithBytes:type_bytes length:1];
+	[out_data appendData:type_data];
+	
+	for(int i=0 ; i< data.length ; i++)
+		{
+		[out_data appendData:[data subdataWithRange:NSMakeRange(i, 1)]];
+		//[out_data appendData:[NSData dataWithBytes:zero_bytes length:1]];
+		}
+	
+	return out_data;
+}
+
 # pragma mark Acknowledge methods
 
 -(void)doDataAckPacket
@@ -230,7 +253,11 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	if([[_dataAckPacket eventTitle]isEqualToString:@"message"])
 	{
 		id data = [_dataAckPacket binary];
-		NSInteger ack = [[_dataAckPacket packetId] integerValue];
+		NSInteger ack;
+		if([_dataAckPacket packetId])
+			ack =[[_dataAckPacket packetId] integerValue];
+		else
+			ack = -1;
 		NSString * nsp = [_dataAckPacket nsp];
 		_dataAckPacket = nil;
 	
@@ -250,29 +277,33 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	{
 		NSString * title = [_dataAckPacket eventTitle];
 		id data = [_dataAckPacket binary];
-		NSInteger ack = [[_dataAckPacket packetId] integerValue];
+		id extra = [_dataAckPacket extra];
+		NSInteger ack;
+		if([_dataAckPacket packetId])
+			ack =[[_dataAckPacket packetId] integerValue];
+		else
+			ack = -1;
 		NSString * nsp = [_dataAckPacket nsp];
+	
 		_dataAckPacket = nil;
 	
-		if (ack>0)
+		if (ack >= 0)
 		{
-			[_delegate socketIO:self didReceiveEvent:title data:data ack:^(id argsData)
-			 {
+			[self didReceive:title content:data extraContent:extra ackFunction:^(id argsData) {
 				[self sendAck:ack andData:argsData onNSP:nsp];
-			
-			 }];
+			}];
 		}
 		else
 		{
-			[_delegate socketIO:self didReceiveEvent:title data:data ack:nil];
+			[self didReceive:title content:data extraContent:extra ackFunction:nil];
 		}
 	}
 }
 
 -(void)sendAck:(NSInteger)ack andData:(id)data onNSP:(NSString *)nsp
 {
-	if([data isKindOfClass:NSData.class])
-		{
+	if(data && [data isKindOfClass:NSData.class])
+	{
 		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeBinaryAck];
 		NSMutableArray *array = [NSMutableArray arrayWithObject:@{@"_placeholder": @"true", @"num":@0}];
 		NSData * jsondata = [NSJSONSerialization dataWithJSONObject:array options:0 error:nil];
@@ -282,9 +313,16 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		[packet setSocketType:SocketIOTypeBinaryAck];
 		[self sendPacket:packet];
 		[self sendData:[self eventToSend:EngineIOTypeMessage withData:data]];
-		}
+	}
+	else if ([data isKindOfClass:NSNull.class] )
+	{
+		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeAck];
+		[packet setPacketId:[NSString stringWithFormat:@"%i", ack]];
+		[packet setData:@"[]"];
+		[self sendPacket:packet];
+	}
 	else
-		{
+	{
 		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeAck];
 		[packet setNsp:nsp];
 		[packet setPacketId:[NSString stringWithFormat:@"%i", ack]];
@@ -292,7 +330,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		NSString * jsonString = [[NSString alloc] initWithData:jsondata encoding:NSUTF8StringEncoding];
 		[packet setData:jsonString];
 		[self sendPacket:packet];
-		}
+	}
 }
 
 
@@ -325,11 +363,12 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 
 - (void) onData:(id)message
 {
-	NSLog(@"RECEIVING : %@", message);
+	
 	
 	
 	if([message isKindOfClass:NSData.class])
 	{
+		NSLog(@"RECEIVING DATA FRAME");
 		NSData * type = [message subdataWithRange:NSMakeRange(0, 1)];
 		UInt8 * array = (UInt8 *) [type bytes];
 		//NSInteger type_int = (NSInteger)array[0];
@@ -364,17 +403,17 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	}
 	else
 	{
+		NSLog(@"RECEIVING : %@", message);
+		// Engine.io protocol
+		// https://github.com/Automattic/engine.io-protocol
 	
-	// Engine.io protocol
-	// https://github.com/Automattic/engine.io-protocol
+		//NSLog(@"Message : %@", message);
 	
-	//NSLog(@"Message : %@", message);
+		NSUInteger type = [[NSString stringWithFormat:@"%c",[message characterAtIndex:0]] integerValue];
 	
-	NSUInteger type = [[NSString stringWithFormat:@"%c",[message characterAtIndex:0]] integerValue];
+		NSString * data = [message substringFromIndex:1];
 	
-	NSString * data = [message substringFromIndex:1];
-	
-	switch (type)
+		switch (type)
 		{
 			case 0:
 			//NSLog(@"Engine.io - OPEN : %@", data);
@@ -577,22 +616,27 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	NSData * jsondata = [message dataUsingEncoding:NSUTF8StringEncoding];
 	NSArray * array = [NSJSONSerialization JSONObjectWithData:jsondata options:NSJSONReadingMutableContainers error:nil];
 	
-	if(ack >= 0)
-		if([array count] == 1)
-			[_delegate socketIO:self didReceiveMessage:[array objectAtIndex:0] ack:^(id argsData)
-			 {
-			 [self sendAck:ack andData:argsData onNSP:nsp];
-			}];
-		else
-			[_delegate socketIO:self didReceiveEvent:[array objectAtIndex:0] data:[array objectAtIndex:1] ack:^(id argsData)
-			 {
-			 [self sendAck:ack andData:argsData onNSP:nsp];
-			 }];
+	id title=nil;
+	id content=nil;
+
+	title = [array objectAtIndex:0];
+	
+	if([array count] == 2)
+		content = [array objectAtIndex:1];
 	else
-		if([array count] == 1)
-			[_delegate socketIO:self didReceiveMessage:[array objectAtIndex:0] ack:nil];
-		else
-			[_delegate socketIO:self didReceiveEvent:[array objectAtIndex:0] data:[array objectAtIndex:1] ack:nil];
+	{
+		NSMutableArray * arrayMut = [NSMutableArray arrayWithArray:array];
+		[arrayMut removeObjectAtIndex:0];
+		content = arrayMut;
+	}
+	
+	if(ack >= 0)
+		[self didReceive:title content:content extraContent:nil ackFunction:^(id argsData) {
+			[self sendAck:ack andData:argsData onNSP:nsp];
+		}];
+	else
+		[self didReceive:title content:content extraContent:nil ackFunction:nil];
+	
 }
 
 
@@ -643,7 +687,11 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		SocketIOCallback callbackFunction = [_acks objectForKey:key];
 		if (callbackFunction != nil)
 		{
-			callbackFunction([array objectAtIndex:0]);
+			if([array count]>0)
+				callbackFunction([array objectAtIndex:0]);
+			else
+				callbackFunction([NSNull null]);
+			
 			[self removeAcknowledgeForKey:key];
 		}
 
@@ -715,6 +763,11 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	NSData * jsondata = [message dataUsingEncoding:NSUTF8StringEncoding];
 	NSArray * array = [NSJSONSerialization JSONObjectWithData:jsondata options:NSJSONReadingAllowFragments error:nil];
 	
+	NSMutableArray * arrayMut = [NSMutableArray arrayWithArray:array];
+	if([arrayMut count]>0)
+		[arrayMut removeObjectAtIndex:0];
+	
+	
 	// Si on a pas déjà reçu les binary du packet
 	if(!_dataAckPacket)
 	{
@@ -725,6 +778,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 			[_dataAckPacket setEventTitle:@"message"];
 		else
 			[_dataAckPacket setEventTitle:[array objectAtIndex:0]];
+	
+		[_dataAckPacket setExtra:arrayMut];
 		// on lui affecte l'id de ack
 		if(ack >= 0)
 			[_dataAckPacket setPacketId:[NSString stringWithFormat:@"%i", ack]];
@@ -735,6 +790,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 			[_dataAckPacket setEventTitle:@"message"];
 		else
 			[_dataAckPacket setEventTitle:[array objectAtIndex:0]];
+	
+		[_dataAckPacket setExtra:arrayMut];
 	
 		if(ack >= 0)
 			[_dataAckPacket setPacketId:[NSString stringWithFormat:@"%i", ack]];
@@ -827,6 +884,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	{
 		packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeEvent];
 		[array addObject:data];
+		
 	}
 	else if(data && [data isKindOfClass:NSData.class])
 	{
@@ -838,8 +896,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeEvent];
 	}
 	
-	NSData * jsondata = [NSJSONSerialization dataWithJSONObject:array options:0 error:nil];
-	NSString * jsonString = [[NSString alloc] initWithData:jsondata encoding:NSUTF8StringEncoding];
+	NSString * jsonString = [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:array options:0 error:nil] encoding:NSUTF8StringEncoding];
+	
 	
 	[packet setNsp:_nsp];
 	[packet setData:jsonString];
@@ -854,7 +912,39 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	   [self sendData:[self eventToSend:EngineIOTypeMessage withData:data]];
 }
 
+- (void) sendStream:(SocketIOOutputStream*)stream name:(NSString *)eventName extradata:(id)extradata
+{
+	[_outputStreams setObject:stream forKey:[stream identifier]];
+	
+	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
+	[packet setValues:@[eventName,@[[NSNumber numberWithInteger:0]], [stream identifier]]];
+	[packet setEventTitle:@"$stream"];
+	[self sendPacket:packet];
+}
 
+- (void) sendStreams:(NSArray*)streams name:(NSString *)eventName extradata:(id)extradata
+{
+	NSMutableArray * indexes = [NSMutableArray new];
+	NSMutableArray * values = [NSMutableArray new];
+	[values addObject:eventName];
+	[values addObject:indexes];
+	
+	NSInteger index = 0;
+	for(SocketIOOutputStream * stream in streams)
+	{
+		[_outputStreams setObject:stream forKey:[stream identifier]];
+		[indexes addObject:[NSNumber numberWithInteger:index]];
+		[values addObject:[stream identifier]];
+		index ++;
+	}
+
+	
+	
+	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
+	[packet setValues:values];
+	[packet setEventTitle:@"$stream"];
+	[self sendPacket:packet];
+}
 
 - (void) sendPacket:(SocketIOPacket *)packet
 {
@@ -875,7 +965,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	if([_transport isReady])
 	{
-		NSLog(@"  SENDING : %@", data);
+		NSLog(@"  SENDING DATA %i bytes", [data length]);
 		[_transport send:data];
 	}
 	else
@@ -930,5 +1020,147 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	dispatch_resume(_ping);
 }
+
+#pragma mark delegates call
+
+-(void)didReceive:(id)title
+		  content:(id)content
+	 extraContent:(id)extraContent
+	  ackFunction:(SocketIOCallback)function
+{
+	if([title isEqualToString:@"$stream"])
+	{
+		[self didReceiveStream:content withCallback:function];
+	}
+	else if([title isEqualToString:@"$stream-read"])
+	{
+		[self didReceiveStreamRead:[content objectAtIndex:0] length:[[content objectAtIndex:1] integerValue] withCallback:function];
+	}
+	else if([title isEqualToString:@"$stream-write"])
+	{
+		[self didReceiveStreamData:content extra:extraContent withCallback:function];
+	}
+	else if([title isEqualToString:@"$stream-end"])
+	{
+		[self didReceiveStreamEnd:content withCallback:function];
+	}
+	else if([title isEqualToString:@"$stream-error"])
+	{
+		NSLog(@"ERROR : %@", content);
+	}
+	else
+	{
+		if(content)
+		{
+			[_delegate socketIO:self didReceiveEvent:title data:content extradata:extraContent ack:function];
+		}
+		else
+		{
+			[_delegate socketIO:self didReceiveMessage:title ack:function];
+		}
+	}
+
+}
+
+#pragma mark Stream analyze
+
+-(void)didReceiveStreamRead:(NSString *)key length:(NSUInteger)len withCallback:(SocketIOInputStreamCallback)function
+{
+	SocketIOOutputStream * stream = ((SocketIOOutputStream *)[_outputStreams objectForKey:key]);
+	
+	[[stream delegate]stream:stream askData:len];
+	
+}
+
+-(void)didReceiveStreamEnd:(NSString *)key withCallback:(SocketIOCallback)function
+{
+	SocketIOInputStream * stream = ((SocketIOInputStream *)[_inputStreams objectForKey:key]);
+	[[stream delegate]streamDidFinish:stream];
+	[_inputStreams removeObjectForKey:key];
+}
+
+-(void)didReceiveStreamData:(NSData *)streamdata extra:(id)extra withCallback:(SocketIOCallback)function
+{
+	NSLog(@"STREAM WRITE");
+	
+	SocketIOInputStream * stream = ((SocketIOInputStream *)[_inputStreams objectForKey:[extra objectAtIndex:0]]);
+	
+	SocketIOInputStreamCallback cb = [stream callback];
+	
+	cb(streamdata);
+	
+	function([NSNull null]);
+}
+
+-(void)didReceiveStream:(NSArray *)streamarray withCallback:(SocketIOCallback)function
+{
+	NSString * title;
+	id data;
+	NSArray * indexes;
+	NSMutableArray * streamKeys = [NSMutableArray new];
+	
+	if([streamarray count]>0 && [[streamarray objectAtIndex:0]isKindOfClass:NSString.class])
+	{
+		title = [streamarray objectAtIndex:0];
+		if([streamarray count]>1 && [[streamarray objectAtIndex:1]isKindOfClass:NSArray.class])
+			indexes = [streamarray objectAtIndex:1];
+	}
+	else
+	{
+		NSAssert(![[streamarray objectAtIndex:0]isKindOfClass:NSString.class], @"Error : Did you give a name to emit ?");
+	}
+	
+	
+	for(NSNumber * index in indexes)
+	{
+		[streamKeys addObject:[streamarray objectAtIndex:[index intValue]+2]];
+	}
+	
+	if(indexes && [streamarray objectAtIndex:[[indexes lastObject] intValue]+2])
+		data = [streamarray objectAtIndex:[[indexes lastObject] intValue]+2];
+	
+
+	for(NSString * key in streamKeys)
+	{
+		SocketIOInputStream * stream = [[SocketIOInputStream alloc]initWithSocket:self identifier:key];
+		[_inputStreams setObject:stream forKey:key];
+		[_delegate socketIO:self didReceiveStream:stream];
+	}
+
+
+}
+
+- (void) streamAskForData:(NSString *)key length:(NSUInteger)len withCallback:(SocketIOInputStreamCallback)function
+{
+	SocketIOInputStream * stream = ((SocketIOInputStream *)[_inputStreams objectForKey:key]);
+	[stream setCallback:function];
+	
+	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
+	[packet setValues:@[key, [NSNumber numberWithInteger:len]]];
+	[packet setEventTitle:@"$stream-read"];
+	[self sendPacket:packet];
+}
+
+- (void) stream:(NSString *)key sendData:(NSData *)data withCallback:(SocketIOCallback)function
+{
+	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
+	
+	[packet setValues:@[key, @{@"_placeholder":[NSNumber numberWithBool:YES], @"num":@0}, @"buffer"]];
+	[packet setEventTitle:@"$stream-write"];
+	[packet setPacketId:[self addAcknowledge:function]];
+	[self sendPacket:packet];
+	[self sendData:[self streamToSend:EngineIOTypeMessage withData:data]];
+}
+
+- (void) streamDidEnd:(NSString *)key
+{
+	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
+	[packet setValues:@[key]];
+	[packet setEventTitle:@"$stream-end"];
+	[self sendPacket:packet];
+	
+	[_outputStreams removeObjectForKey:key];
+}
+
 
 @end

@@ -26,7 +26,8 @@ typedef enum {
 	SocketIOTypeError,
 	SocketIOTypeBinaryEvent,
 	SocketIOTypeBinaryAck,
-	SocketIOTypeNone
+	SocketIOTypeNone,
+	SocketIOTypeStream
 } SocketIOType;
 
 @interface SocketIOPacket : NSObject
@@ -40,9 +41,10 @@ typedef enum {
 @property (strong, nonatomic) NSString * eventData;
 @property (strong, nonatomic) NSString * data;
 @property (strong, nonatomic) NSData * binary;
+@property (strong, nonatomic) id extra;
 @property (strong, nonatomic) NSString * nsp;
 @property (strong, nonatomic) NSString *packetId;
-
+@property (strong, nonatomic) NSArray * values;
 - (id) initWithEngineType:(EngineIOType) _engineType socketType:(SocketIOType)_socketType;
 - (id) initWithEngineType:(EngineIOType) _engineType socketType:(SocketIOType)_socketType rawData:(NSString*)rawdata;
 - (NSString *) toString;

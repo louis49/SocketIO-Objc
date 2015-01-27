@@ -2,7 +2,7 @@ var Socket = require('./Socket')
 var Server = module.exports;
 //var Blob = require('blob');
 //var fs = require('fs');
-//var ss = require('socket.io-stream');
+var ss = require('socket.io-stream');
 
 Server.auth = function(socket, next)
 {	
@@ -15,6 +15,8 @@ Server.auth = function(socket, next)
 Server.connect = function(socket)
 {
 	console.log ( "Client Connected :", socket.client.conn.remoteAddress, "ON", socket.nsp.name);
+	
+	ss(socket).on('Send Stream', Socket.receiveStream);
 	
 	socket.on('disconnect', Socket.disconnect);
 	
@@ -44,6 +46,7 @@ Server.connect = function(socket)
 	
 	socket.on('EventAskBinaryMessageWithBinaryAck', Socket.binaryMessageWithBinaryAck);
 	
+	socket.on('EventAskSendStream', Socket.sendStream);
 	
 	//var stream = ss.createStream();
 	//ss(socket).emit('foo', stream);

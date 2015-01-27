@@ -15,7 +15,7 @@
 @end
 
 @implementation SocketIOPacket
-@synthesize engineType, socketType, data, nsp, packetId, binary, eventTitle, eventData;
+@synthesize engineType, socketType, data, nsp, packetId, binary, eventTitle, eventData, values, extra;
 
 - (id) initWithEngineType:(EngineIOType) _engineType socketType:(SocketIOType)_socketType
 {
@@ -54,7 +54,7 @@
 	// EngineIO Type
 	[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:engineType]]];
 	
-	if(socketType != SocketIOTypeNone)
+	if(socketType != SocketIOTypeNone && socketType != SocketIOTypeStream)
 	{
 		// SocketIO Type
 		[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:socketType]]];
@@ -75,6 +75,39 @@
 	
 		if(data)
 			[array addObject:[NSString stringWithFormat:@"%@",data]];
+	}
+	else if(socketType == SocketIOTypeStream)
+	{
+		NSMutableArray * streamdata = [NSMutableArray new];
+		if([eventTitle isEqualToString:@"$stream-write"])
+		{
+			[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:SocketIOTypeBinaryEvent]]];
+			[array addObject:@"1-"];
+		}
+		else
+		{
+			[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:SocketIOTypeEvent]]];
+		}
+		if(packetId)
+			[array addObject:[NSString stringWithFormat:@"%@", packetId]];
+	
+		[streamdata addObject:[NSString stringWithFormat:@"[\"%@\"",eventTitle]];
+	
+		for(id value in values)
+		{
+			if([value isKindOfClass:NSNumber.class])
+				[streamdata addObject:[NSString stringWithFormat:@"%i",[value integerValue]]];
+			else if([value isKindOfClass:NSString.class])
+				[streamdata addObject:[NSString stringWithFormat:@"\"%@\"",value]];
+			else
+			{
+				NSData * jsondata = [NSJSONSerialization dataWithJSONObject:value options:0 error:nil];
+				NSString * jsonString = [[NSString alloc] initWithData:jsondata encoding:NSUTF8StringEncoding];
+				[streamdata addObject:jsonString];
+			}
+		}
+	
+		[array addObject:[[streamdata componentsJoinedByString:@","] stringByAppendingString:@"]"]];
 	}
 	
 	NSString * string = [array componentsJoinedByString:@""];

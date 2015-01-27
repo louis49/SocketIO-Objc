@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #  run.sh
-#  TestServer
+#  SignalingServer
 #
 #  Created by Desnos on 01/12/2014.
 #
@@ -13,8 +13,11 @@ PROJECT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $PROJECT_DIR
 echo $PWD
-pkill -f node
 
-npm install --save socket.io
-npm install --save socket.io-stream
-node App.js
+npm install socket.io-client
+npm install socket.io
+npm install socket.io-stream
+npm install browserify-fs
+
+browserify browser.js -o bundle.js
+open index.html -a "Google Chrome"

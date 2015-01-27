@@ -7,8 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <SocketIO.h> 
+#import <SocketIO.h>
+#import "SocketIOInputStream.h" 
+#import "SocketIOOutputStream.h"
 
-@interface BDViewController : UIViewController<SocketIODelegate>
+@interface BDViewController : UIViewController<SocketIODelegate, SocketIOInputStreamDelegate, SocketIOOutputStreamDelegate>
 
 @end
