@@ -54,3 +54,42 @@ function([@"Binary Ack" dataUsingEncoding:NSASCIIStringEncoding]);
 OR
 function(@"Simple Ack");
 ```
+
+Sending Stream : 
+``` objective-c
+SocketIOOutputStream * stream = [[SocketIOOutputStream alloc] initWithSocket:socket];
+[stream setDelegate:self];
+[socket sendStream:stream1  name:@"Send Stream" extradata:nil];
+OR
+[socket sendStreams:@[stream]  name:@"Send Stream" extradata:nil];
+```
+Then, implement this delegate to "push" data when asked : 
+``` objective-c
+- (void) stream:(SocketIOOutputStream*)stream askData:(NSUInteger)length;
+```
+
+Receiving Stream : 
+Implement this delegate and read data : 
+``` objective-c
+- (void) socketIO:(SocketIO *)socket didReceiveStream:(SocketIOInputStream *)stream
+{
+	[stream setDelegate:self];
+	if (![stream isFinished])
+		[stream readLength:1024];
+}
+```
+Then, implement this delegate to read data when received and ask more data : 
+``` objective-c
+- (void) stream:(SocketIOInputStream*)stream didReceiveData:(NSData*)data
+{
+	// Read Data
+
+	if (![stream isFinished])
+		[stream readLength:1024];
+}
+```
+
+When there is no more data this delegate is called: 
+``` objective-c
+- (void) streamDidFinish:(SocketIOInputStream*)stream;
+```
