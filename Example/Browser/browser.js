@@ -2,7 +2,7 @@ var io = require('socket.io-client');
 var fs = require('browserify-fs');
 var ss = require('socket.io-stream');
 
-var socket = io.connect('http://localhost:8080', {'transports':['websocket']});
+var socket = io.connect('http://localhost:8080/public', {'transports':['websocket']});
 
 socket.on('connect', function ()
 {

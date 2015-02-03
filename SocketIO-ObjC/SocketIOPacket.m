@@ -82,11 +82,16 @@
 		if([eventTitle isEqualToString:@"$stream-write"])
 		{
 			[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:SocketIOTypeBinaryEvent]]];
-			[array addObject:@"1-"];
+			if(nsp)
+				[array addObject:[NSString stringWithFormat:@"1-%@,",nsp]];
+			else
+				[array addObject:@"1-"];
 		}
 		else
 		{
 			[array addObject:[NSString stringWithFormat:@"%@",[NSNumber numberWithInteger:SocketIOTypeEvent]]];
+			if(nsp)
+				[array addObject:[NSString stringWithFormat:@"%@,",nsp]];
 		}
 		if(packetId)
 			[array addObject:[NSString stringWithFormat:@"%@", packetId]];

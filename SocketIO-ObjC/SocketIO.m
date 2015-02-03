@@ -307,9 +307,13 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeBinaryAck];
 		NSMutableArray *array = [NSMutableArray arrayWithObject:@{@"_placeholder": @"true", @"num":@0}];
 		NSData * jsondata = [NSJSONSerialization dataWithJSONObject:array options:0 error:nil];
-		NSString * jsonString = [[NSString alloc] initWithData:jsondata encoding:NSUTF8StringEncoding];
+		NSMutableString * jsonString = [[NSMutableString alloc] initWithData:jsondata encoding:NSUTF8StringEncoding];
+
+		//[jsonString replaceOccurrencesOfString:@"\"true\"" withString:@"true" options:0 range:NSMakeRange(0, jsonString.length)];
+	
 		[packet setPacketId:[NSString stringWithFormat:@"%i", ack]];
 		[packet setData:jsonString];
+		[packet setNsp:nsp];
 		[packet setSocketType:SocketIOTypeBinaryAck];
 		[self sendPacket:packet];
 		[self sendData:[self eventToSend:EngineIOTypeMessage withData:data]];
@@ -318,6 +322,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	{
 		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeAck];
 		[packet setPacketId:[NSString stringWithFormat:@"%i", ack]];
+		[packet setNsp:self.nsp];
 		[packet setData:@"[]"];
 		[self sendPacket:packet];
 	}
@@ -751,9 +756,24 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		data = [data substringToIndex:start_message.location];
 	}
 	
+	// Recherche du endpoint
+	NSString * nsp;
+	NSRange start_nsp = [data rangeOfString:@"/"];
+	NSRange end_nsp = [data rangeOfString:@"," options:NSBackwardsSearch];
+	if (start_nsp.location != NSNotFound &&
+		end_nsp.location != NSNotFound)
+	{
+		NSRange range_message = NSMakeRange(start_nsp.location, end_nsp.location - start_nsp.location);
+		
+		nsp = [data substringWithRange:range_message];
+		
+		data = [data substringFromIndex:end_nsp.location+1];
+	}
+	
 	NSRange start_ack = [data rangeOfString:@"-"];
 	
-	data = [data substringFromIndex:start_ack.location + 1];
+	if(start_ack.location != NSNotFound)
+		data = [data substringFromIndex:start_ack.location + 1];
 	
 	// Recherche du ack
 	NSInteger ack=-1;
@@ -773,7 +793,10 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	{
 		// Mais on ne connait pas son type de contenu
 		_dataAckPacket = [[SocketIOPacket alloc] initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeNone];
-		
+	
+		[_dataAckPacket setNsp:nsp];
+	
+	
 		if([array count] == 1)
 			[_dataAckPacket setEventTitle:@"message"];
 		else
@@ -792,6 +815,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 			[_dataAckPacket setEventTitle:[array objectAtIndex:0]];
 	
 		[_dataAckPacket setExtra:arrayMut];
+	
+		[_dataAckPacket setNsp:nsp];
 	
 		if(ack >= 0)
 			[_dataAckPacket setPacketId:[NSString stringWithFormat:@"%i", ack]];
@@ -942,6 +967,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
 	[packet setValues:values];
+	[packet setNsp:self.nsp];
 	[packet setEventTitle:@"$stream"];
 	[self sendPacket:packet];
 }
@@ -1137,6 +1163,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
 	[packet setValues:@[key, [NSNumber numberWithInteger:len]]];
+	[packet setNsp:self.nsp];
 	[packet setEventTitle:@"$stream-read"];
 	[self sendPacket:packet];
 }
@@ -1148,6 +1175,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	[packet setValues:@[key, @{@"_placeholder":[NSNumber numberWithBool:YES], @"num":@0}, @"buffer"]];
 	[packet setEventTitle:@"$stream-write"];
 	[packet setPacketId:[self addAcknowledge:function]];
+	[packet setNsp:self.nsp];
 	[self sendPacket:packet];
 	[self sendData:[self streamToSend:EngineIOTypeMessage withData:data]];
 }
@@ -1156,6 +1184,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 {
 	SocketIOPacket *packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeStream];
 	[packet setValues:@[key]];
+	[packet setNsp:self.nsp];
 	[packet setEventTitle:@"$stream-end"];
 	[self sendPacket:packet];
 	

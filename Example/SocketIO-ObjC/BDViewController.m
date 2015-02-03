@@ -241,7 +241,7 @@
 	
 	[socket sendEvent:@"EventAskBinaryMessageWithNoAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
 	[socket sendEvent:@"EventAskBinaryMessageWithBinaryAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
-	 
+
 }
 
 - (void) socketIO:(SocketIO *)socket didReceiveError:(NSString *)error

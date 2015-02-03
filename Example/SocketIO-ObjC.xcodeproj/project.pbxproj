@@ -98,6 +98,7 @@
 		893B917E1A6FBC2A009E2272 /* SocketIOOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SocketIOOutputStream.m; sourceTree = "<group>"; };
 		89B0CEF31A777EDC000CBB48 /* Pix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Pix.png; path = ../Browser/Pix.png; sourceTree = "<group>"; };
 		89B0CEF51A77817A000CBB48 /* Google.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Google.png; sourceTree = "<group>"; };
+		89B0CEFD1A77E47A000CBB48 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		89C4716F1A6E6A1400F6F033 /* browser.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = browser.js; sourceTree = "<group>"; };
 		89C471711A6E6A1400F6F033 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		89C471761A6E6A1400F6F033 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
@@ -152,6 +153,7 @@
 		6003F581195388D10070C39A = {
 			isa = PBXGroup;
 			children = (
+				89B0CEFD1A77E47A000CBB48 /* README.md */,
 				89C4716E1A6E6A1400F6F033 /* Browser */,
 				89F8F9D81A6E4564003C2690 /* Node */,
 				89F8F9C61A6E43B2003C2690 /* SocketIO-ObjC */,
