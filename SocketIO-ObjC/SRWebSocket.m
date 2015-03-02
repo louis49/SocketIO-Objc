@@ -561,7 +561,10 @@ static __strong NSData *CRLFCRLF;
     CFWriteStreamRef writeStream = NULL;
     
     CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)host, port, &readStream, &writeStream);
-    
+	
+	CFReadStreamSetProperty(readStream, kCFStreamNetworkServiceType, kCFStreamNetworkServiceTypeVoIP);
+	CFWriteStreamSetProperty(writeStream, kCFStreamNetworkServiceType, kCFStreamNetworkServiceTypeVoIP);
+	
     _outputStream = CFBridgingRelease(writeStream);
     _inputStream = CFBridgingRelease(readStream);
     
