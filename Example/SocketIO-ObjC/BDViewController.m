@@ -239,6 +239,7 @@
 	[socket sendEvent:@"EventAskBinaryEventWithSimpleAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
 	[socket sendEvent:@"EventAskBinaryEventWithBinaryAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
 	
+	
 	[socket sendEvent:@"EventAskBinaryMessageWithNoAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
 	[socket sendEvent:@"EventAskBinaryMessageWithBinaryAck" data:@{@"var00": @"value00", @"var01":@"value01"}];
 

@@ -47,15 +47,11 @@
 		6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5B8195388D20070C39A /* InfoPlist.strings */; };
 		6003F5BC195388D20070C39A /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* Tests.m */; };
-		893B917F1A6FBC2A009E2272 /* SocketIOOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 893B917E1A6FBC2A009E2272 /* SocketIOOutputStream.m */; };
-		893B91801A6FBC2A009E2272 /* SocketIOOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 893B917E1A6FBC2A009E2272 /* SocketIOOutputStream.m */; };
 		89B0CEF41A777EDC000CBB48 /* Pix.png in Resources */ = {isa = PBXBuildFile; fileRef = 89B0CEF31A777EDC000CBB48 /* Pix.png */; };
 		89B0CEF61A77817A000CBB48 /* Google.png in Resources */ = {isa = PBXBuildFile; fileRef = 89B0CEF51A77817A000CBB48 /* Google.png */; };
 		89C471771A6E6A1400F6F033 /* browser.js in Resources */ = {isa = PBXBuildFile; fileRef = 89C4716F1A6E6A1400F6F033 /* browser.js */; };
 		89C471791A6E6A1400F6F033 /* run.sh in Resources */ = {isa = PBXBuildFile; fileRef = 89C471711A6E6A1400F6F033 /* run.sh */; };
 		89C4717E1A6E6A1400F6F033 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 89C471761A6E6A1400F6F033 /* index.html */; };
-		89C4718A1A6EB43100F6F033 /* SocketIOInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 89C471891A6EB43100F6F033 /* SocketIOInputStream.m */; };
-		89C4718B1A6EB43100F6F033 /* SocketIOInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 89C471891A6EB43100F6F033 /* SocketIOInputStream.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,8 +90,6 @@
 		6003F5B9195388D20070C39A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		6003F5BB195388D20070C39A /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
 		606FC2411953D9B200FFA9A0 /* Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tests-Prefix.pch"; sourceTree = "<group>"; };
-		893B917D1A6FBC2A009E2272 /* SocketIOOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SocketIOOutputStream.h; sourceTree = "<group>"; };
-		893B917E1A6FBC2A009E2272 /* SocketIOOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SocketIOOutputStream.m; sourceTree = "<group>"; };
 		89B0CEF31A777EDC000CBB48 /* Pix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Pix.png; path = ../Browser/Pix.png; sourceTree = "<group>"; };
 		89B0CEF51A77817A000CBB48 /* Google.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Google.png; sourceTree = "<group>"; };
 		89B0CEFD1A77E47A000CBB48 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -103,15 +97,6 @@
 		89C471711A6E6A1400F6F033 /* run.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
 		89C471761A6E6A1400F6F033 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		89C471831A6E6C9300F6F033 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
-		89C471881A6EB43100F6F033 /* SocketIOInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SocketIOInputStream.h; sourceTree = "<group>"; };
-		89C471891A6EB43100F6F033 /* SocketIOInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SocketIOInputStream.m; sourceTree = "<group>"; };
-		89F8F9C71A6E43B2003C2690 /* SocketIO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketIO.h; sourceTree = "<group>"; };
-		89F8F9C81A6E43B2003C2690 /* SocketIO.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SocketIO.m; sourceTree = "<group>"; };
-		89F8F9C91A6E43B2003C2690 /* SocketIOPacket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketIOPacket.h; sourceTree = "<group>"; };
-		89F8F9CA1A6E43B2003C2690 /* SocketIOPacket.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SocketIOPacket.m; sourceTree = "<group>"; };
-		89F8F9CB1A6E43B2003C2690 /* SocketIOTransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketIOTransport.h; sourceTree = "<group>"; };
-		89F8F9CC1A6E43B2003C2690 /* SocketIOTransportWebsocket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SocketIOTransportWebsocket.h; sourceTree = "<group>"; };
-		89F8F9CD1A6E43B2003C2690 /* SocketIOTransportWebsocket.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SocketIOTransportWebsocket.m; sourceTree = "<group>"; };
 		89F8F9D91A6E4564003C2690 /* App.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = App.js; sourceTree = "<group>"; };
 		89F8F9DA1A6E4564003C2690 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		89F8F9DB1A6E4564003C2690 /* run.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = run.sh; sourceTree = "<group>"; };
@@ -156,7 +141,6 @@
 				89B0CEFD1A77E47A000CBB48 /* README.md */,
 				89C4716E1A6E6A1400F6F033 /* Browser */,
 				89F8F9D81A6E4564003C2690 /* Node */,
-				89F8F9C61A6E43B2003C2690 /* SocketIO-ObjC */,
 				60FF7A9C1954A5C5007DD14C /* Podspec Metadata */,
 				6003F593195388D20070C39A /* SocketIO-ObjC */,
 				6003F5B5195388D20070C39A /* Tests */,
@@ -254,25 +238,6 @@
 				89C471761A6E6A1400F6F033 /* index.html */,
 			);
 			path = Browser;
-			sourceTree = "<group>";
-		};
-		89F8F9C61A6E43B2003C2690 /* SocketIO-ObjC */ = {
-			isa = PBXGroup;
-			children = (
-				89F8F9C71A6E43B2003C2690 /* SocketIO.h */,
-				89F8F9C81A6E43B2003C2690 /* SocketIO.m */,
-				89F8F9C91A6E43B2003C2690 /* SocketIOPacket.h */,
-				89F8F9CA1A6E43B2003C2690 /* SocketIOPacket.m */,
-				89F8F9CB1A6E43B2003C2690 /* SocketIOTransport.h */,
-				89F8F9CC1A6E43B2003C2690 /* SocketIOTransportWebsocket.h */,
-				89F8F9CD1A6E43B2003C2690 /* SocketIOTransportWebsocket.m */,
-				89C471881A6EB43100F6F033 /* SocketIOInputStream.h */,
-				89C471891A6EB43100F6F033 /* SocketIOInputStream.m */,
-				893B917D1A6FBC2A009E2272 /* SocketIOOutputStream.h */,
-				893B917E1A6FBC2A009E2272 /* SocketIOOutputStream.m */,
-			);
-			name = "SocketIO-ObjC";
-			path = "../SocketIO-ObjC";
 			sourceTree = "<group>";
 		};
 		89F8F9D81A6E4564003C2690 /* Node */ = {
@@ -477,11 +442,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				89C4718A1A6EB43100F6F033 /* SocketIOInputStream.m in Sources */,
 				6003F59E195388D20070C39A /* BDAppDelegate.m in Sources */,
 				6003F5A7195388D20070C39A /* BDViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
-				893B917F1A6FBC2A009E2272 /* SocketIOOutputStream.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -489,9 +452,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				89C4718B1A6EB43100F6F033 /* SocketIOInputStream.m in Sources */,
 				6003F5BC195388D20070C39A /* Tests.m in Sources */,
-				893B91801A6FBC2A009E2272 /* SocketIOOutputStream.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

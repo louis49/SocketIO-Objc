@@ -88,6 +88,7 @@ static NSString* kTransportURL = @"%@://%@:%i/socket.io/1/websocket/?EIO=2&trans
 - (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error
 {
 	NSLog(@"didFailWithError : %@", error);
+	[_delegate onDisconnect:@"erreur"];
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean

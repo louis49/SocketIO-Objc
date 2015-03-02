@@ -15,6 +15,7 @@ cd $PROJECT_DIR
 echo $PWD
 pkill -f node
 
+npm install --save express
 npm install --save socket.io
 npm install --save socket.io-stream
 node App.js

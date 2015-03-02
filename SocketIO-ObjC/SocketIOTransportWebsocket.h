@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "SocketIOTransport.h"
-#import <SRWebSocket.h>
+#import "SRWebSocket.h"
 
 @interface SocketIOTransportWebsocket : NSObject <SocketIOTransport, SRWebSocketDelegate>
 

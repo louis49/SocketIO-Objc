@@ -22,7 +22,7 @@ typedef void(^SocketIOInputStreamCallback)(id argsData);
 @interface SocketIOInputStream : NSObject
 
 @property (assign, readonly) BOOL isFinished;
-@property (retain) id<SocketIOInputStreamDelegate> delegate;
+@property (weak) id<SocketIOInputStreamDelegate> delegate;
 @property (copy,nonatomic) SocketIOInputStreamCallback callback;
 
 

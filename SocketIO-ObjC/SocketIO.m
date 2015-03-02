@@ -5,7 +5,7 @@
 //  Created by Desnos on 22/12/2014.
 //  Copyright (c) 2014 Desnos. All rights reserved.
 //
-
+//#define NSLog(FORMAT, ...) fprintf(stderr,"%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);
 #import "SocketIO.h"
 
 #import <AFNetworking.h>
@@ -125,6 +125,8 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	[manager setResponseSerializer:[AFHTTPResponseSerializer serializer]];
 	
+	//NSLog(@"%@", handshakeUrl);
+	
 	[manager GET:handshakeUrl
 	  parameters:nil
 		 success:^(AFHTTPRequestOperation *operation, id responseObject)
@@ -139,7 +141,9 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		}
 		 failure:^(AFHTTPRequestOperation *operation, NSError *error)
 		{
-			NSLog(@"Failure : %@", error);
+			NSLog(@"DECONNECTE : %@", error);
+		
+			[self performSelector:@selector(connectWithParams:) withObject:params afterDelay:1];
 		}];
 }
 
@@ -150,9 +154,11 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	if([json valueForKey:@"sid"] != nil && [json valueForKey:@"upgrades"] != nil && [json valueForKey:@"pingInterval"] != nil && [json valueForKey:@"pingTimeout"] != nil)
 	{
 		_sid = [json objectForKey:@"sid"];
-		_pingInterval = [[json objectForKey:@"pingInterval"] floatValue] / 1000;
+		_pingInterval = [[json objectForKey:@"pingInterval"] floatValue] / 2000;
+
 		_pingTimeout = [[json objectForKey:@"pingTimeout"] floatValue] / 1000 ;
 	
+		
 		NSArray *transports = [json objectForKey:@"upgrades"];
 	
 		if([transports indexOfObject:@"websocket"] != NSNotFound)
@@ -326,7 +332,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 		[packet setData:@"[]"];
 		[self sendPacket:packet];
 	}
-	else
+	else if(data)
 	{
 		SocketIOPacket * packet = [[SocketIOPacket alloc]initWithEngineType:EngineIOTypeMessage socketType:SocketIOTypeAck];
 		[packet setNsp:nsp];
@@ -368,9 +374,6 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 
 - (void) onData:(id)message
 {
-	
-	
-	
 	if([message isKindOfClass:NSData.class])
 	{
 		NSLog(@"RECEIVING DATA FRAME");
@@ -408,7 +411,12 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	}
 	else
 	{
-		NSLog(@"RECEIVING : %@", message);
+		/*if(![message isEqualToString:@"40"] &&
+		   ![message isEqualToString:@"40/public"] &&
+		   ![message isEqualToString:@"40/private"] &&
+		   ![message isEqualToString:@"2"] &&
+		   ![message isEqualToString:@"3"])
+			NSLog(@"RECEIVING : %@", message);*/
 		// Engine.io protocol
 		// https://github.com/Automattic/engine.io-protocol
 	
@@ -978,11 +986,19 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	if([_transport isReady])
 	{
-		NSLog(@"  SENDING : %@", req);
+		if(![req isEqualToString:@"40"] &&
+		   ![req isEqualToString:@"40/public,"] &&
+		   ![req isEqualToString:@"40/private,"] &&
+		   ![req isEqualToString:@"2"] &&
+		   ![req isEqualToString:@"3"])
+			NSLog(@"  SENDING ON : %@: %@", packet.nsp, req);
 		[_transport send:req];
 	}
 	else
+	{
+		NSLog(@"ADDING TO QUEUE");
 		[_queue addObject:packet];
+	}
 	
 }
 
@@ -1017,6 +1033,9 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 -(void) sendPing
 {
 	SocketIOPacket *packet = [[SocketIOPacket alloc] initWithEngineType:EngineIOTypePing socketType:SocketIOTypeNone];
+	
+	[packet setNsp:self.nsp];
+	
 	[self sendPacket:packet];
 }
 
@@ -1035,7 +1054,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	dispatch_source_set_timer(_ping,
 							  dispatch_time(DISPATCH_TIME_NOW, DISPATCH_TIME_NOW),
-							  _pingTimeout * NSEC_PER_SEC,
+							  _pingInterval * NSEC_PER_SEC,
 							  0);
 	
 	__weak SocketIO *weakSelf = self;

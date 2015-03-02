@@ -11,15 +11,15 @@
 
 @class SocketIOOutputStream;
 @protocol SocketIOOutputStreamDelegate <NSObject>
-- (void) stream:(SocketIOOutputStream*)stream askData:(NSUInteger)length;
-- (void) streamDidFinish:(SocketIOOutputStream*)stream;
+- (void) stream:(id)stream askData:(NSUInteger)length;
+- (void) streamDidFinish:(id)stream;
 @end
 
 @class SocketIO;
 typedef void(^SocketIOOutputStreamCallback)(id argsData);
 @interface SocketIOOutputStream : NSObject
 @property (assign, readonly) BOOL isFinished;
-@property (retain) id<SocketIOOutputStreamDelegate> delegate;
+@property (weak) id<SocketIOOutputStreamDelegate> delegate;
 @property (copy,nonatomic) SocketIOOutputStreamCallback callback;
 
 -(id)initWithSocket:(SocketIO *)socket;
