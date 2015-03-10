@@ -703,7 +703,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 			if([array count]>0)
 				callbackFunction([array objectAtIndex:0]);
 			else
-				callbackFunction([NSNull null]);
+				callbackFunction(nil);
 			
 			[self removeAcknowledgeForKey:key];
 		}
@@ -1134,7 +1134,7 @@ static NSString* kHandshakeURL = @"%@://%@%@/%@/1/?EIO=2&transport=%@&t=%.0f%@";
 	
 	cb(streamdata);
 	
-	function([NSNull null]);
+	function(nil);
 }
 
 -(void)didReceiveStream:(NSArray *)streamarray withCallback:(SocketIOCallback)function
